@@ -19,7 +19,8 @@
   "homepage": "https://github.com/yzhbankov/zorko-server#readme",
   "dependencies": {
     "body-parser": "^1.18.2",
-    "express": "^4.16.3"
+    "express": "^4.16.3",
+    "mongodb": "^3.0.7"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.3",
