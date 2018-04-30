@@ -1,11 +1,11 @@
 module.exports = {
     server: {
-        port: 8082,
+        port: process.env.PORT,
     },
     db: {
-        url: 'mongodb://localhost:27017',
-        name: 'zorko',
+        url: process.env.MONGO_ROOT_URL,
+        name: process.env.MONGO_DB_NAME,
     },
-    secret: 'turandot opera',
-    jwtsecret: 'super ninja jwt secret',
+    secret: process.env.SESSION_SECRET,
+    jwtsecret: process.env.JWT_SECRET,
 };

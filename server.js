@@ -2,13 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-const JWTStrategy = require("passport-jwt").Strategy;
-const ExtractJWT = require("passport-jwt").ExtractJwt;
-
 const bcrypt = require('bcrypt');
 
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const JWTStrategy = require('passport-jwt').Strategy;
+const ExtractJWT = require('passport-jwt').ExtractJwt;
+
+require('dotenv').config();
 const config = require('./config');
 const api = require('./server/api');
 const db = require('./db');
@@ -27,7 +28,7 @@ app.use(session({
     secret: config.secret,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: true },
+    cookie: { secure: true, maxAge: 60000 },
 }));
 
 passport.use(new LocalStrategy(
@@ -69,7 +70,6 @@ passport.use(new JWTStrategy(
 passport.serializeUser((user, done) => {
     done(null, user._id);
 });
-
 passport.deserializeUser(async (id, done) => {
     const usersCollection = db.get().collection('users');
     usersCollection.findOne({ _id: id }, (err, user) => {

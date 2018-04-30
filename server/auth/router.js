@@ -21,7 +21,8 @@ router.post(
 );
 
 router.get('/logout', (req, res) => {
-    res.send('Hello from logout router');
+    req.logout();
+    res.send('You are logout');
 });
 
 router.post('/sign_up', async (req, res, next) => {
