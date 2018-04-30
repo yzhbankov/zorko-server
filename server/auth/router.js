@@ -1,14 +1,22 @@
 const express = require('express');
 const error = require('http-errors');
+const passport = require('passport');
 
 const db = require('./../../db');
 const { userCreate } = require('./handlers');
 
 const router = express.Router();
 
-router.get('/login', (req, res) => {
-    res.send('Hello from login router');
-});
+router.post(
+    '/login',
+    passport.authenticate('local', {
+        failureRedirect: '/login',
+    }),
+    (req, res) => {
+        console.log(req);
+        res.send('Hello from login router');
+    },
+);
 
 router.get('/logout', (req, res) => {
     res.send('Hello from logout router');
