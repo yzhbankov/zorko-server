@@ -7,4 +7,5 @@ module.exports = {
         name: 'zorko',
     },
     secret: 'turandot opera',
+    jwtsecret: 'super ninja jwt secret',
 };

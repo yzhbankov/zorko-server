@@ -1,7 +1,9 @@
 const express = require('express');
 const error = require('http-errors');
 const passport = require('passport');
+const jwt = require('jsonwebtoken');
 
+const config = require('./../../config');
 const db = require('./../../db');
 const { userCreate } = require('./handlers');
 
@@ -13,8 +15,8 @@ router.post(
         failureRedirect: '/login',
     }),
     (req, res) => {
-        console.log(req);
-        res.send('Hello from login router');
+        const token = jwt.sign(req.user, config.jwtsecret, { expiresIn: '1h' });
+        return res.json({ user: req.user, token });
     },
 );
 
@@ -30,7 +32,7 @@ router.post('/sign_up', async (req, res, next) => {
             throw error(422, 'Should be specified password and email');
         }
         const usersCollection = db.get().collection('users');
-        const userExist = await usersCollection.find({email}).toArray();
+        const userExist = await usersCollection.find({ email }).toArray();
 
         if (userExist.length > 0) {
             throw error(422, 'User with this email already exist');
