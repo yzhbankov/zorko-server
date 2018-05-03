@@ -6,8 +6,8 @@ const router = express.Router();
 
 router.use(bodyParser.json({ limit: '100mb' }));
 
-router.use('/user', require('./users/router'));
+router.use('/users', require('./users/router'));
 router.use('/auth', require('./auth/router'));
-router.use('/schemas', passport.authenticate('jwt', { session: false }), require('./schemas/router'));
+router.use('/specs', passport.authenticate('jwt', { session: false }), require('./specs/router'));
 
 module.exports = router;

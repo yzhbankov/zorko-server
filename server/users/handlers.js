@@ -9,18 +9,33 @@ async function findUserByEmail(email) {
     return user;
 }
 
-async function getUsers(uid = null) {
+function formatUser(user) {
+    const formattedUser = { ...user };
+    formattedUser.id = formattedUser._id;
+    delete formattedUser._id;
+    return formattedUser;
+}
+
+async function getUsers(uid = null, options) {
     const usersCollection = db.get().collection('users');
     if (!uid) {
-        return usersCollection.find({}).toArray();
+        let users = await usersCollection.find({}).toArray();
+        users = users.map(user => formatUser(user));
+        if (options.offset) {
+            users = users.filter((user, index) => index > options.offset - 1);
+        }
+        if (options.limit) {
+            users = users.filter((user, index) => index <= options.limit - 1);
+        }
+        return users;
     }
-    return usersCollection.findOne({ _id: ObjectId(uid) });
+    const user = await usersCollection.findOne({ _id: ObjectId(uid) });
+    return formatUser(user);
 }
 
 async function createUser(user) {
     const usersCollection = db.get().collection('users');
     const userExist = await findUserByEmail(user.email);
-    console.log(userExist)
     if (userExist) {
         throw error(422, 'User with this email already exist');
     }

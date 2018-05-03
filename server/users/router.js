@@ -7,13 +7,15 @@ const router = express.Router();
 router.get(['/', '/:uid'], async (req, res) => {
     try {
         const uid = req.params.uid;
-        const query = req.query;
-        console.log('query', query);
+        const options = {
+            limit: req.query.limit ? Number(req.query.limit) : 0,
+            offset: req.query.offset ? Number(req.query.offset) : 0,
+        };
         if (uid) {
             const user = await getUsers(uid);
             res.status(200).send(user);
         } else {
-            const users = await getUsers();
+            const users = await getUsers(null, options);
             res.status(200).send(users);
         }
     } catch (err) {
