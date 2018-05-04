@@ -1,10 +1,10 @@
 const express = require('express');
 
-const { getUsers, createUser } = require('./handlers');
+const { getUsers, createUser, removeUser } = require('./handlers');
 
 const router = express.Router();
 
-router.get(['/', '/:uid'], async (req, res) => {
+router.get(['/', '/:uid'], async (req, res, next) => {
     try {
         const uid = req.params.uid;
         const options = {
@@ -19,11 +19,11 @@ router.get(['/', '/:uid'], async (req, res) => {
             res.status(200).send(users);
         }
     } catch (err) {
-        throw err;
+        next(err);
     }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
     try {
         const data = {
             email: req.body.email,
@@ -33,7 +33,18 @@ router.post('/', async (req, res) => {
         const user = await createUser(data);
         res.status(200).send(user);
     } catch (err) {
-        throw err;
+        next(err);
+
+    }
+});
+
+router.delete('/:uid', async (req, res, next) => {
+    try {
+        const uid = req.params.uid;
+        const user = await removeUser(uid);
+        res.status(204).send(user);
+    } catch (err) {
+        next(err);
     }
 });
 

@@ -3,9 +3,14 @@ const bcrypt = require('bcrypt');
 const ObjectId = require('mongodb').ObjectID;
 const db = require('./../../db');
 
-async function findUserByEmail(email) {
+async function findUserByEmailOrUid(email, uid) {
     const usersCollection = db.get().collection('users');
-    const user = await usersCollection.findOne({ email });
+    let user;
+    if (email) {
+        user = await usersCollection.findOne({ email });
+    } else if (uid) {
+        user = await usersCollection.findOne({ _id: ObjectId(uid) });
+    }
     return user;
 }
 
@@ -35,7 +40,7 @@ async function getUsers(uid = null, options) {
 
 async function createUser(user) {
     const usersCollection = db.get().collection('users');
-    const userExist = await findUserByEmail(user.email);
+    const userExist = await findUserByEmailOrUid(user.email, null);
     if (userExist) {
         throw error(422, 'User with this email already exist');
     }
@@ -43,12 +48,29 @@ async function createUser(user) {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(user.password, saltRounds);
 
-    const result = await usersCollection.insert({ email: user.email, password: hashedPassword, admin: user.admin, created_at: now });
+    const result = await usersCollection.insert({
+        email: user.email, password: hashedPassword, admin: user.admin, created_at: now,
+    });
 
     return result.ops[0];
+}
+
+async function removeUser(uid) {
+    const usersCollection = db.get().collection('users');
+    const userExist = await findUserByEmailOrUid(null, uid);
+    if (!userExist) {
+        throw error(404, 'Removed user not found');
+    }
+    const result = await usersCollection.deleteOne({
+        _id: uid,
+    });
+    console.log('result', result);
+
+    return userExist;
 }
 
 module.exports = {
     getUsers,
     createUser,
+    removeUser,
 };

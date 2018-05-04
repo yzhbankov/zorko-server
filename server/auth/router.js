@@ -27,19 +27,22 @@ router.get('/logout', (req, res) => {
 
 router.post('/sign_up', async (req, res, next) => {
     try {
-        const { password, email } = req.body;
+        const {
+            email, password, login, firstName, lastName, avatarUrl,
+        } = req.body;
 
-        if (!password || !email) {
-            throw error(422, 'Should be specified password and email');
+
+        if (!password || !email || !login) {
+            throw error(422, 'Should be specified password, email and login');
         }
         const usersCollection = db.get().collection('users');
-        const userExist = await usersCollection.find({ email }).toArray();
+        const usersExist = await usersCollection.find({ $or: [{ email }, { login }] }).toArray();
 
-        if (userExist.length > 0) {
-            throw error(422, 'User with this email already exist');
+        if (usersExist.length > 0) {
+            throw error(422, 'User with this email and login already exist');
         }
 
-        const newUser = await userCreate(password, email);
+        const newUser = await userCreate(email, password, login, firstName, lastName, avatarUrl);
 
         res.send(newUser);
     } catch (err) {
