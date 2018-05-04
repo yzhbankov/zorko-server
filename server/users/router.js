@@ -1,18 +1,19 @@
 const express = require('express');
+const passport = require('passport');
 
 const { getUsers, createUser, removeUser } = require('./handlers');
 
 const router = express.Router();
 
-router.get(['/', '/:uid'], async (req, res, next) => {
+router.get(['/', '/:login'], async (req, res, next) => {
     try {
-        const uid = req.params.uid;
+        const login = req.params.login;
         const options = {
             limit: req.query.limit ? Number(req.query.limit) : 0,
             offset: req.query.offset ? Number(req.query.offset) : 0,
         };
-        if (uid) {
-            const user = await getUsers(uid);
+        if (login) {
+            const user = await getUsers(login, {});
             res.status(200).send(user);
         } else {
             const users = await getUsers(null, options);
@@ -23,7 +24,7 @@ router.get(['/', '/:uid'], async (req, res, next) => {
     }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
     try {
         const data = {
             email: req.body.email,
@@ -38,7 +39,7 @@ router.post('/', async (req, res, next) => {
     }
 });
 
-router.delete('/:uid', async (req, res, next) => {
+router.delete('/:uid', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
     try {
         const uid = req.params.uid;
         const user = await removeUser(uid);

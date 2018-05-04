@@ -1,7 +1,9 @@
 const error = require('http-errors');
 const bcrypt = require('bcrypt');
 const ObjectId = require('mongodb').ObjectID;
+
 const db = require('./../../db');
+const { DATES } = require('./../config/constants');
 
 async function findUserByEmailOrUid(email, uid) {
     const usersCollection = db.get().collection('users');
@@ -15,26 +17,37 @@ async function findUserByEmailOrUid(email, uid) {
 }
 
 function formatUser(user) {
-    const formattedUser = { ...user };
-    formattedUser.id = formattedUser._id;
-    delete formattedUser._id;
-    return formattedUser;
+    return {
+        login: user.login,
+        avatarUrl: user.avatarUrl ? user.avatarUrl : '',
+        specs: user.specs ? user.specs : [],
+    };
 }
 
-async function getUsers(uid = null, options) {
+async function getUsers(login = null, { offset = 0, limit = 0 }) {
     const usersCollection = db.get().collection('users');
-    if (!uid) {
-        let users = await usersCollection.find({}).toArray();
-        users = users.map(user => formatUser(user));
-        if (options.offset) {
-            users = users.filter((user, index) => index > options.offset - 1);
-        }
-        if (options.limit) {
-            users = users.filter((user, index) => index <= options.limit - 1);
-        }
-        return users;
+    if (!login) {
+        const users = await usersCollection.find({
+            $where: `(new Date(this.removedAt)).getTime() === ${(new Date(DATES.REMOVED_AT)).getTime()}`,
+        })
+            .skip(offset).limit(limit).toArray();
+
+        return users.map(user => formatUser(user));
     }
-    const user = await usersCollection.findOne({ _id: ObjectId(uid) });
+
+    const user = await usersCollection.findOne({
+        $and: [
+            { login },
+            {
+                $where: `(new Date(this.removedAt)).getTime() === ${(new Date(DATES.REMOVED_AT)).getTime()}`,
+            },
+        ],
+    });
+
+    if (!user) {
+        throw error(404, 'User not found');
+    }
+
     return formatUser(user);
 }
 
