@@ -1,90 +1,125 @@
-const error = require('http-errors');
-const db = require('./../../db');
+const jwt = require('jsonwebtoken');
+const mongo = require('mongodb');
 const ObjectId = require('mongodb').ObjectID;
+const Grid = require('gridfs-stream');
 
-const { SEARCH } = require('./../config/constants');
-const { findUserByEmailOrUid, setSpecsToUser } = require('./../users/handlers');
+require('dotenv').config();
+const config = require('./../../config');
+const db = require('./../../db');
 
-function formatSpec(spec) {
-    return {
-        id: spec._id,
-        title: spec.title,
-        preview: spec.preview,
-        author: {
-            login: spec.createdBy.login,
-            avatarUrl: spec.createdBy.avatarUrl,
-        },
-    };
+const Specs = require('./');
+
+async function getSpecsHandler(req, res, next) {
+    try {
+        const uid = req.params.uid;
+        const options = {
+            limit: req.query.limit ? Number(req.query.limit) : 0,
+            offset: req.query.offset ? Number(req.query.offset) : 0,
+        };
+        if (uid) {
+            const spec = await Specs.getSpecs(uid, {});
+            if (!spec) {
+                res.status(404).send('Spec not found');
+            }
+            res.status(200).send(spec.spec);
+        } else {
+            const users = await Specs.getSpecs(null, options);
+            res.status(200).send(users);
+        }
+    } catch (err) {
+        next(err);
+    }
 }
 
-async function createSpec({ spec, title, email, preview }) {
+async function createSpecHandler(req, res, next) {
     try {
-        const specsCollection = db.get().collection('specs');
-        const now = new Date();
+        const token = req.headers.authorization;
+        const decoded = jwt.verify(token.replace('Bearer ', ''), config.jwtsecret);
+        const spec = {
+            spec: req.body.spec ? req.body.spec : {},
+            preview: '',
+            title: req.body.title ? req.body.title : '',
+            email: decoded.email,
+        };
+        const newSpec = await Specs.createSpec(spec);
+        res.status(200).send(newSpec);
+    } catch (err) {
+        next(err);
+    }
+}
 
-        const currentUser = await findUserByEmailOrUid(email);
-        if (!currentUser) {
-            throw error(404, 'User not found');
+async function removeSpecHandler(req, res, next) {
+    try {
+        const uid = req.params.uid;
+        const token = req.headers.authorization;
+        const decoded = jwt.verify(token.replace('Bearer ', ''), config.jwtsecret);
+        const spec = await Specs.removeSpec(uid, decoded.email);
+        res.status(204).send(spec);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function addPreviewHandler(req, res, next) {
+    try {
+        const uid = req.params.uid;
+        const token = req.headers.authorization;
+        const decoded = jwt.verify(token.replace('Bearer ', ''), config.jwtsecret);
+        const spec = await Specs.getSpecs(uid, {});
+        if (!spec || spec.createdBy.email !== decoded.email) {
+            res.status(404).send('Spec not found');
         }
-
-        const result = await specsCollection.insert({
-            spec,
-            title,
-            createdBy: {
-                email, login: currentUser.email, avatarUrl: currentUser.avatarUrl,
-            },
-            preview,
-            createdAt: now,
-            updatedAt: now,
+        const gfs = Grid(db.get(), mongo);
+        req.pipe(gfs.createWriteStream({
+            content_type: 'image/svg+xml',
+            root: 'specs',
+        })).on('close', async (savedFile) => {
+            const previewUrl = `${req.hostname}:${config.server.port}/specs/preview/${savedFile._id}`;
+            const specsCollection = db.get().collection('specs');
+            await specsCollection.updateOne(
+                {  _id: ObjectId(uid) },
+                { $set: { preview: previewUrl } },
+            );
+            return res.send({ previewUrl });
         });
-        const createdSpec = result.ops[0];
-
-
-        const currentUserSpecs = currentUser.specs ? currentUser.specs : [];
-        const updatedUserSpecs = [...currentUserSpecs, createdSpec._id];
-        await setSpecsToUser(email, updatedUserSpecs);
-
-        return result.ops[0];
     } catch (err) {
-        throw err;
+        next(err);
     }
 }
 
-async function removeSpec(uid, email) {
+async function getPreview(req, res, next) {
     try {
-        const specsCollection = db.get().collection('specs');
-        const specExist = await specsCollection.findOne({ _id: ObjectId(uid), 'createdBy.email': email });
-        const user = await findUserByEmailOrUid(email);
-        if (!specExist || !user) {
-            throw error(404, 'Spec or user not exist');
+        const uid = req.params.uid;
+        const gfs = Grid(db.get(), mongo);
+        const previewExist = await gfs.exist({
+            _id: ObjectId(uid),
+            content_type: 'image/svg+xml',
+            root: 'specs',
+        });
+
+        if (!previewExist) {
+            res.status(404).send('preview not found');
         }
-        await specsCollection.deleteOne({ _id: ObjectId(uid), 'createdBy.email': email });
-        const updatedUserSpecs = user.specs.filter(spec => ObjectId(spec).toString() !== ObjectId(uid).toString());
-        await setSpecsToUser(email, updatedUserSpecs);
+
+        const readstream = gfs.createReadStream({
+            _id: ObjectId(uid),
+            content_type: 'image/svg+xml',
+            root: 'specs',
+        });
+        readstream.on('error', (err) => {
+            console.log('Read preview from db error', err);
+            throw err;
+        });
+        readstream.pipe(res);
     } catch (err) {
-        throw err;
+        next(err);
     }
-}
-
-async function getSpecs(uid = null, { offset = 0, limit = SEARCH.LIMIT }) {
-    const specsCollection = db.get().collection('specs');
-    if (!uid) {
-        const specs = await specsCollection.find({ })
-            .skip(offset)
-            .limit(limit)
-            .sort({ createdAt: -1 })
-            .toArray();
-
-        return specs.map(spec => formatSpec(spec));
-    }
-
-    const spec = await specsCollection.findOne({ _id: ObjectId(uid) });
-
-    return spec;
 }
 
 module.exports = {
-    createSpec,
-    removeSpec,
-    getSpecs,
+    getSpecsHandler,
+    createSpecHandler,
+    removeSpecHandler,
+    addPreviewHandler,
+    getPreview,
 };

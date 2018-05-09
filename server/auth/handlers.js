@@ -1,42 +1,34 @@
-const bcrypt = require('bcrypt');
 const error = require('http-errors');
 
 const db = require('./../../db');
-const { DATES } = require('./../config/constants');
+const Auth = require('./');
 
-async function userCreate(email, password, login = '', firstName = '', lastName = '', avatarUrl = '') {
-    const usersCollection = db.get().collection('users');
-    const saltRounds = 10;
+async function signUpHandler(req, res, next) {
+    try {
+        const {
+            email, password, login, firstName, lastName, avatarUrl,
+        } = req.body;
 
-    const hash = await bcrypt.hash(password, saltRounds);
 
-    const user = {
-        email,
-        password: hash,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        removedAt: new Date(DATES.REMOVED_AT),
-        login,
-        firstName,
-        lastName,
-        avatarUrl,
-        specs: [],
-    };
+        if (!password || !email || !login) {
+            throw error(422, 'Should be specified password, email and login');
+        }
+        const usersCollection = db.get().collection('users');
+        const usersExist = await usersCollection.find({$or: [{email}, {login}]}).toArray();
 
-    const insert = await usersCollection.insert({ ...user });
+        if (usersExist.length > 0) {
+            throw error(422, 'User with this email and login already exist');
+        }
 
-    if (insert.result && insert.result.ok === 1 && insert.result.n === 1) {
-        const insertedUser = insert.ops[0];
-        insertedUser.id = insertedUser._id;
-        delete insertedUser._id;
+        const newUser = await Auth.userCreate(email, password, login, firstName, lastName, avatarUrl);
 
-        return { ...insertedUser };
-    } else {
-        throw error(400, 'User not created');
+        res.send(newUser);
+    } catch (err) {
+        console.error(err);
+        next(err);
     }
-
 }
 
 module.exports = {
-    userCreate,
+    signUpHandler,
 };
