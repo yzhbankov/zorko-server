@@ -3,7 +3,7 @@ const passport = require('passport');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const { createSpec } = require('./handlers');
+const { createSpec,removeSpec } = require('./handlers');
 const config = require('./../../config');
 
 const router = express.Router();
@@ -24,6 +24,18 @@ router.post('/', passport.authenticate('jwt', { session: false }), async (req, r
         };
         const newSpec = await createSpec(spec);
         res.status(200).send(newSpec);
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.delete('/:uid', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
+    try {
+        const uid = req.params.uid;
+        const token = req.headers.authorization;
+        const decoded = jwt.verify(token.replace('Bearer ', ''), config.jwtsecret);
+        const spec = await removeSpec(uid, decoded.email);
+        res.status(204).send(spec);
     } catch (err) {
         next(err);
     }

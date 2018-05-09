@@ -26,9 +26,25 @@ async function createSpec({ spec, title, createdBy, preview }) {
     } catch (err) {
         throw err;
     }
+}
 
+async function removeSpec(uid, email) {
+    try {
+        const specsCollection = db.get().collection('specs');
+        const specExist = await specsCollection.findOne({ _id: ObjectId(uid), createdBy: email });
+        const user = await findUserByEmailOrUid(email);
+        if (!specExist || !user) {
+            throw error(404, 'Spec or user not exist');
+        }
+        await specsCollection.deleteOne({ _id: ObjectId(uid), createdBy: email });
+        const updatedUserSpecs = user.specs.filter(spec => ObjectId(spec).toString() !== ObjectId(uid).toString());
+        await setSpecsToUser(email, updatedUserSpecs);
+    } catch (err) {
+        throw err;
+    }
 }
 
 module.exports = {
     createSpec,
+    removeSpec,
 };
