@@ -16,6 +16,22 @@ async function findUserByEmailOrUid(email, uid) {
     return user;
 }
 
+async function setSpecsToUser(email, specs) {
+    try {
+        const usersCollection = db.get().collection('users');
+        let user;
+        if (email) {
+            user = await usersCollection.updateOne(
+                { email },
+                { $set: { specs } },
+            );
+        }
+        return user;
+    } catch (err) {
+        throw err;
+    }
+}
+
 function formatUser(user) {
     return {
         login: user.login,
@@ -85,4 +101,6 @@ module.exports = {
     getUsers,
     createUser,
     removeUser,
+    findUserByEmailOrUid,
+    setSpecsToUser,
 };
