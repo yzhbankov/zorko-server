@@ -62,7 +62,7 @@ async function removeSpecHandler(req, res, next) {
 
 async function addPreviewHandler(req, res, next) {
     try {
-        const uid = req.params.uid;
+        const uid = req.params.specUid;
         const token = req.headers.authorization;
         const decoded = jwt.verify(token.replace('Bearer ', ''), config.jwtsecret);
         const spec = await Specs.getSpecs(uid, {});
@@ -89,7 +89,7 @@ async function addPreviewHandler(req, res, next) {
 
 async function getPreview(req, res, next) {
     try {
-        const uid = req.params.uid;
+        const uid = req.params.prevUid;
         const gfs = Grid(db.get(), mongo);
         const previewExist = await gfs.exist({
             _id: ObjectId(uid),
