@@ -28,7 +28,7 @@ router.post('/', passport.authenticate('jwt', { session: false }), async (req, r
     try {
         const data = {
             email: req.body.email,
-            password: req.body.email,
+            password: req.body.password,
             admin: req.body.admin,
         };
         const user = await createUser(data);

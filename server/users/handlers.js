@@ -74,10 +74,9 @@ async function removeUser(uid) {
     if (!userExist) {
         throw error(404, 'Removed user not found');
     }
-    const result = await usersCollection.deleteOne({
+    await usersCollection.deleteOne({
         _id: uid,
     });
-    console.log('result', result);
 
     return userExist;
 }
