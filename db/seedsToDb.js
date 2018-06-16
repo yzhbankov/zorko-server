@@ -3,30 +3,9 @@ require('dotenv')
 const config = require('../config');
 const db = require('.');
 const admin = require('./seeds/users/admin');
-const util = require('util');
-const fs = require('fs');
+const { readSpecs } = require('./utils');
 
-const fsReaddir = util.promisify(fs.readdir);
-const fsReadFile = util.promisify(fs.readFile);
-
-const readFileNames = async path => fsReaddir(path);
-const readFile = async path => fsReadFile(path);
-
-const SEEDS_SPECS_PATH = `${__dirname}/seeds/specs/vega-lite`;
-const getSpecFilePath = fileName => `${SEEDS_SPECS_PATH}/${fileName}`;
 const DEFAULT_DATE = '2018-05-04T17:00:00.000+0000';
-
-const readSpecs = async () => {
-    let specs = [];
-    try {
-        const filenames = await readFileNames(SEEDS_SPECS_PATH);
-        const fileBuffers = await Promise.all(filenames.map(filename => readFile(getSpecFilePath(filename))));
-        specs = fileBuffers.map(buffer => JSON.parse(buffer.toString()));
-    } catch (e) {
-        console.error(e);
-    }
-    return specs;
-};
 
 const loadSeedsToDb = async () => {
     try {
