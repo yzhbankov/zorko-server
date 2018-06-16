@@ -2,21 +2,24 @@ const util = require('util');
 const fs = require('fs');
 const rimraf = require('rimraf');
 const vl = require('vega-lite');
-const _ = require('lodash');
+const vega = require('vega');
 
-const fsReaddir = util.promisify(fs.readdir);
-const fsReadFile = util.promisify(fs.readFile);
-const fsRimRaf = util.promisify(rimraf);
+const promiseReaddir = util.promisify(fs.readdir);
+const promiseReadFile = util.promisify(fs.readFile);
+const promiseRimRaf = util.promisify(rimraf);
+const promiseWriteFile = util.promisify(fs.writeFile);
 
-const readFileNames = async path => fsReaddir(path);
-const readFile = async path => fsReadFile(path);
-const removeAllFilesInFolder = async folder => fsRimRaf(`${folder}/*`);
+const readFileNames = async folderPath => promiseReaddir(folderPath);
+const readFile = async filePath => promiseReadFile(filePath);
+const removeAllFilesInFolder = async folderPath => promiseRimRaf(`${folderPath}/*`);
+const writeFile = async (filePath, content) => promiseWriteFile(filePath, content);
 
 const SEEDS_SPECS_PATH = `${__dirname}/seeds/specs/vega-lite`;
 const SEEDS_PREVIEWS_PATH = `${__dirname}/seeds/previews/vega-lite`;
+const SEEDS_DATA_PATH = `${__dirname}/seeds/`;
 
 const getSpecFilePath = fileName => `${SEEDS_SPECS_PATH}/${fileName}`;
-// const getPreviewFilePath = fileName => `${SEEDS_PREVIEWS_PATH}/${fileName}`;
+const getPreviewFilePath = fileName => `${SEEDS_PREVIEWS_PATH}/${fileName}`;
 
 const readSpecs = async () => {
     let specs = [];
@@ -30,6 +33,18 @@ const readSpecs = async () => {
     return specs;
 };
 
+const specNameToPreviewName = (specName) => specName.replace('.json', '.svg');
+
+async function renderAsSVG(spec) {
+    const vg = new vega.View(vega.parse(spec), {
+        loader: vega.loader({ baseURL: SEEDS_DATA_PATH }),
+        logLevel: vega.Warn,
+        renderer: 'none',
+    });
+
+    return vg.toSVG();
+}
+
 const generatePreviews = async () => {
     try {
         let filenames = await readFileNames(SEEDS_PREVIEWS_PATH);
@@ -37,32 +52,73 @@ const generatePreviews = async () => {
             await removeAllFilesInFolder(SEEDS_PREVIEWS_PATH);
         }
         let specs = await readSpecs();
-        filenames = await readFileNames(SEEDS_SPECS_PATH);
-
-        specs = specs.reduce((memo, spec, index) => ({
-            ...memo,
-            [filenames[index]]: spec,
-        }), {});
-
-        specs = _.map(specs, (val, key) => {
+        specs = specs.map((val) => {
             let spec;
             try {
                 spec = vl.compile(val).spec;
             } catch (e) {
                 console.error(e);
             }
-            return {
-                [key]: spec,
-            };
+            return spec;
         });
-        console.log(specs);
+
+        specs = specs.map(async (val) => {
+            let content = val;
+            if (content) {
+                try {
+                    content = await renderAsSVG(content);
+                } catch (e) {
+                    console.error(e);
+                }
+            } else {
+                content = '';
+            }
+            return content;
+        });
+
+        specs = await Promise.all(specs);
+        filenames = await readFileNames(SEEDS_SPECS_PATH);
+
+        const writeStats = filenames.map(async (filename, index) => {
+            let writeStatus = 'none';
+            const previewFileName = specNameToPreviewName(filename);
+            const previewPath = getPreviewFilePath(previewFileName);
+            const spec = specs[index];
+            if (spec) {
+                try {
+                    writeStatus = await writeFile(previewPath, spec);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+            return writeStatus;
+        });
+
+        await Promise.all(writeStats);
     } catch (e) {
         console.error(e);
     }
 };
 
+const findAndReadPreviewBySpecName = async (specFileName) => {
+    const previewFileName = specNameToPreviewName(specFileName);
+    const previewPath = getPreviewFilePath(previewFileName);
+    let content = '';
+    try {
+        content = await readFile(previewPath);
+        content = content.toString();
+    } catch (e) {
+        console.error(e);
+    }
+    return content;
+};
+
+
 module.exports = {
+    SEEDS_SPECS_PATH,
+    readFileNames,
     generatePreviews,
     readSpecs,
+    findAndReadPreviewBySpecName,
 };
 

@@ -3,7 +3,9 @@ require('dotenv')
 const config = require('../config');
 const db = require('.');
 const admin = require('./seeds/users/admin');
-const { readSpecs } = require('./utils');
+const {
+    readSpecs, readFileNames, SEEDS_SPECS_PATH, findAndReadPreviewBySpecName, 
+} = require('./utils');
 
 const DEFAULT_DATE = '2018-05-04T17:00:00.000+0000';
 
@@ -21,8 +23,12 @@ const loadSeedsToDb = async () => {
                 const specsCollection = db.get()
                     .collection('specs');
 
+                const specFileNames = await readFileNames(SEEDS_SPECS_PATH);
+                const previews = await Promise.all(specFileNames.map(findAndReadPreviewBySpecName));
+
                 const specs = await readSpecs();
-                const specInsertResults = await Promise.all(specs.map(spec => specsCollection.insert({
+
+                const specInsertResults = await Promise.all(specs.map((spec, index) => specsCollection.insert({
                     spec,
                     createdBy: {
                         login: admin.login,
@@ -30,7 +36,7 @@ const loadSeedsToDb = async () => {
                         lastName: admin.lastName,
                         avatarUtl: admin.avatarUtl,
                     },
-                    preview: null,
+                    preview: previews[index],
                     createdAt: DEFAULT_DATE,
                     updatedAt: DEFAULT_DATE,
                 })));
