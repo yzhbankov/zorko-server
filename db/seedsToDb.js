@@ -1,54 +1,75 @@
-require('dotenv').config();
+require('dotenv')
+    .config();
 const config = require('../config');
 const db = require('.');
-const { users } = require('./seeds/users');
-const { specs } = require('./seeds/specs');
+const admin = require('./seeds/users/admin');
+const {
+    readSpecs, readFileNames, SEEDS_SPECS_PATH, findAndReadPreviewBySpecName, 
+} = require('./utils');
 
-try {
-    db.connect(config.db.url, async (err) => {
-        if (err) {
-            console.log('Unable to connect to Mongo.');
-            process.exit(1);
-        } else {
-            db.get().dropDatabase();
-            const usersCollection = db.get().collection('users');
-            const specsCollection = db.get().collection('specs');
-            const specsIds = [];
+const DEFAULT_DATE = '2018-05-04T17:00:00.000+0000';
 
-            for (let i = 0; i < specs.length; i += 1) {
-                const result = await specsCollection.insert({
-                    spec: specs[i].spec,
-                    title: specs[i].title,
-                    createdBy: specs[i].createdBy,
-                    preview: specs[i].preview,
-                    createdAt: specs[i].createdAt,
-                    updatedAt: specs[i].updatedAt,
-                });
-                specsIds.push(...Object.values(result.insertedIds));
-            }
+const loadSeedsToDb = async () => {
+    try {
+        db.connect(config.db.url, async (err) => {
+            if (err) {
+                console.log('Unable to connect to Mongo.');
+                process.exit(1);
+            } else {
+                db.get()
+                    .dropDatabase();
+                const usersCollection = db.get()
+                    .collection('users');
+                const specsCollection = db.get()
+                    .collection('specs');
 
-            for (let i = 0; i < users.length; i += 1) {
+                const specFileNames = await readFileNames(SEEDS_SPECS_PATH);
+                const previews = await Promise.all(specFileNames.map(findAndReadPreviewBySpecName));
+
+                const specs = await readSpecs();
+
+                const specInsertResults = await Promise.all(specs.map((spec, index) => specsCollection.insert({
+                    spec,
+                    createdBy: {
+                        login: admin.login,
+                        firstName: admin.firstName,
+                        lastName: admin.lastName,
+                        avatarUtl: admin.avatarUtl,
+                    },
+                    preview: previews[index],
+                    createdAt: DEFAULT_DATE,
+                    updatedAt: DEFAULT_DATE,
+                })));
+
+                const specIds = specInsertResults.reduce((memo, result) => {
+                    memo.push(...Object.values(result.insertedIds));
+                    return memo;
+                }, []);
+
+                console.log(`Database successfully filled with ${specIds.length} specs`);
+
                 await usersCollection.insert({
-                    email: users[i].email,
-                    login: users[i].login,
-                    password: users[i].password,
-                    admin: users[i].admin,
-                    createdAt: users[i].createdAt,
-                    updatedAt: users[i].updatedAt,
-                    removedAt: users[i].removedAt,
-                    firstName: users[i].firstName,
-                    lastName: users[i].lastName,
-                    avatarUtl: users[i].avatarUtl,
-                    specs: specsIds,
+                    email: admin.email,
+                    login: admin.login,
+                    password: admin.password,
+                    admin: admin.admin,
+                    createdAt: admin.createdAt,
+                    updatedAt: admin.updatedAt,
+                    removedAt: admin.removedAt,
+                    firstName: admin.firstName,
+                    lastName: admin.lastName,
+                    avatarUtl: admin.avatarUtl,
+                    specs: specIds,
                 });
+
+                console.log('Database successfully filled with 1 user');
+                process.exit(0);
             }
+        });
+    } catch (e) {
+        console.log('Error. db filled with error', e);
+        process.exit(1);
+    }
+};
 
-            console.log('Database successfully filled');
-            process.exit(0);
-        }
-    });
-} catch (e) {
-    console.log('Error. db filled with error', e);
-    process.exit(1);
-}
-
+loadSeedsToDb();

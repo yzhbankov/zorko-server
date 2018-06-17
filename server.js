@@ -13,6 +13,7 @@ require('dotenv').config();
 const config = require('./config');
 const api = require('./server/api');
 const db = require('./db');
+const cors = require('cors');
 
 const app = express();
 
@@ -23,6 +24,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+app.use(cors({
+    origin: config.client.url,
+    credentials: true,
+}));
 
 app.use(session({
     secret: config.secret,
