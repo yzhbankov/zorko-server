@@ -4,7 +4,7 @@ const config = require('../config');
 const db = require('.');
 const admin = require('./seeds/users/admin');
 const {
-    readSpecs, readFileNames, SEEDS_SPECS_PATH, findAndReadPreviewBySpecName, 
+    readSpecs, readFileNames, SEEDS_SPECS_PATH, findAndReadPreviewBySpecName,
 } = require('./utils');
 
 const DEFAULT_DATE = '2018-05-04T17:00:00.000+0000';
@@ -30,6 +30,7 @@ const loadSeedsToDb = async () => {
 
                 const specInsertResults = await Promise.all(specs.map((spec, index) => specsCollection.insert({
                     spec,
+                    title: spec.description,
                     createdBy: {
                         login: admin.login,
                         firstName: admin.firstName,
