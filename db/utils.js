@@ -69,6 +69,7 @@ const generatePreviews = async () => {
                     content = await renderAsSVG(content);
                 } catch (e) {
                     console.error(e);
+                    content = '';
                 }
             } else {
                 content = '';
