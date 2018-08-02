@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node server.js",
-    "seeds_to_db": "node db/seedsToDb.js",
-    "specs_to_previews": "node db/specsToPreviews.js"
+    "start": "node server.js",
+    "seeds-to-db": "node db/seedsToDb.js",
+    "specs-to-previews": "node db/specsToPreviews.js",
+    "postinstall": "npm run seeds-to-db"
   },
   "repository": {
     "type": "git",

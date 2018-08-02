@@ -87,7 +87,7 @@ app.use(api);
 
 db.connect(config.db.url, (err) => {
     if (err) {
-        console.log('Unable to connect to Mongo.');
+        console.error('Unable to connect to Mongo.', err);
         process.exit(1);
     } else {
         app.listen(config.server.port, () => {
