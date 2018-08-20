@@ -4,10 +4,21 @@ const passport = require('passport');
 const router = express.Router();
 const config = require('./../../config');
 
+// function ensureAuthenticated(req, res, next) {
+//     if (req.isAuthenticated()) {
+//         return next();
+//     }
+//     return res.status(403)
+//         .send({ error: { code: 'NOT_AUTHORIZED_SESSION' } });
+// }
 
-router.get('/auth', passport.authenticate('github', () => {
+router.get('/auth', passport.authenticate('github', { scope: ['user:email'] }, () => {
     console.log('start auth with github');
 }));
+
+router.get('/account', (req, res) => {
+    res.send({ user: req.user });
+});
 
 router.get(
     '/callback', passport.authenticate('github', { failureRedirect: `${config.client.url}\\failure-auth` }),

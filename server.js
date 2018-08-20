@@ -38,41 +38,41 @@ app.use(session({
     cookie: { secure: true, maxAge: 60000 },
 }));
 
-passport.use(new LocalStrategy(
-    {
-        usernameField: 'email',
-        passwordField: 'password',
-    },
-    async (username, password, done) => {
-        const usersCollection = db.get().collection('users');
-        const user = await usersCollection.findOne({ email: username }, { password: false });
+// passport.use(new LocalStrategy(
+//     {
+//         usernameField: 'email',
+//         passwordField: 'password',
+//     },
+//     async (username, password, done) => {
+//         const usersCollection = db.get().collection('users');
+//         const user = await usersCollection.findOne({ email: username }, { password: false });
+//
+//         if (!user) { return done(null, false); }
+//
+//         const correctPassword = bcrypt.compareSync(password, user.password);
+//
+//         if (!correctPassword) { return done(null, false); }
+//
+//         delete user.password;
+//
+//         return done(null, user);
+//     },
+// ));
 
-        if (!user) { return done(null, false); }
-
-        const correctPassword = bcrypt.compareSync(password, user.password);
-
-        if (!correctPassword) { return done(null, false); }
-
-        delete user.password;
-
-        return done(null, user);
-    },
-));
-
-passport.use(new JWTStrategy(
-    {
-        jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-        secretOrKey: config.jwtsecret,
-    },
-    async (jwtPayload, done) => {
-        const usersCollection = db.get().collection('users');
-        const user = await usersCollection.findOne({ email: jwtPayload.email });
-
-        if (!user) { return done(null, false); }
-
-        return done(null, user);
-    },
-));
+// passport.use(new JWTStrategy(
+//     {
+//         jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+//         secretOrKey: config.jwtsecret,
+//     },
+//     async (jwtPayload, done) => {
+//         const usersCollection = db.get().collection('users');
+//         const user = await usersCollection.findOne({ email: jwtPayload.email });
+//
+//         if (!user) { return done(null, false); }
+//
+//         return done(null, user);
+//     },
+// ));
 
 passport.use(new GitHubStrategy(
     {
@@ -81,21 +81,33 @@ passport.use(new GitHubStrategy(
         callbackURL: config.github.callbackUrl,
     },
     async (accessToken, refreshToken, profile, done) => {
-        const user = await User.findUserByEmailOrUid(profile.email);
-        return done(null, user || false);
+        const {
+            id, avatar_url, login, email, name,
+        } = profile._json;
+        const user = await User.findOrCreate({
+            githubId: id,
+            avatarUrl: avatar_url,
+            login,
+            email,
+            firstName: name,
+            lastName: '',
+        });
+        return done(null, user);
     },
 ));
 
 passport.serializeUser((user, done) => {
-    done(null, user._id);
+    console.log('serialize user', user);
+    done(null, user);
 });
-passport.deserializeUser(async (id, done) => {
-    const usersCollection = db.get().collection('users');
-    usersCollection.findOne({ _id: id }, (err, user) => {
-        done(err, user);
-    });
+passport.deserializeUser(async (obj, done) => {
+    console.log('deserialize user', obj);
+    // const usersCollection = db.get().collection('users');
+    // usersCollection.findOne({ _id: id }, (err, user) => {
+    //     done(err, user);
+    // });
+    done(null, obj);
 });
-
 
 app.use(api);
 
