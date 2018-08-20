@@ -8,12 +8,14 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const JWTStrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
+const GitHubStrategy = require('passport-github').Strategy;
 
 require('dotenv').config();
 const config = require('./config');
 const api = require('./server/api');
 const db = require('./db');
 const cors = require('cors');
+const User = require('./server/users');
 
 const app = express();
 
@@ -69,6 +71,18 @@ passport.use(new JWTStrategy(
         if (!user) { return done(null, false); }
 
         return done(null, user);
+    },
+));
+
+passport.use(new GitHubStrategy(
+    {
+        clientID: config.github.clientId,
+        clientSecret: config.github.secret,
+        callbackURL: config.github.callbackUrl,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+        const user = await User.findUserByEmailOrUid(profile.email);
+        return done(null, user || false);
     },
 ));
 
