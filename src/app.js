@@ -13,7 +13,6 @@ const logger = require('./logger');
 // const GitHubStrategy = require('passport-github').Strategy;
 
 const config = require('./config');
-const api = require('./api');
 const db = require('../db');
 const cors = require('cors');
 // const User = require('./users');
@@ -32,7 +31,6 @@ app.use(session({
     secret: config.auth.sessionSecret,
     resave: true,
     saveUninitialized: true,
-    cookie: { secure: true, maxAge: 60000 },
 }));
 
 // passport.use(new LocalStrategy(
@@ -109,7 +107,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(api);
+app.use(require('./api/router'));
 
 db.connect(config.db.url, (err) => {
     if (err) {
