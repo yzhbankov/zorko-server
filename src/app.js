@@ -13,7 +13,7 @@ const logger = require('./logger');
 // const GitHubStrategy = require('passport-github').Strategy;
 
 const config = require('./config');
-const db = require('../db');
+const db = require('./db');
 const cors = require('cors');
 // const User = require('./users');
 

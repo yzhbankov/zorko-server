@@ -1,7 +1,7 @@
 const error = require('http-errors');
 const logger = require('../logger');
 
-const db = require('./../../db');
+const db = require('../db');
 const Auth = require('./');
 
 async function signUpHandler(req, res, next) {

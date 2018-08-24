@@ -2,7 +2,7 @@ const error = require('http-errors');
 const bcrypt = require('bcrypt');
 const ObjectId = require('mongodb').ObjectID;
 
-const db = require('./../../db');
+const db = require('../db');
 const { DATES } = require('../constants');
 
 async function findUserByEmailOrUid(email, uid) {

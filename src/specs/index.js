@@ -1,5 +1,5 @@
 const error = require('http-errors');
-const db = require('./../../db');
+const db = require('../db');
 const ObjectId = require('mongodb').ObjectID;
 
 const { SEARCH } = require('../constants');

@@ -14,9 +14,9 @@ const readFile = async filePath => promiseReadFile(filePath);
 const removeAllFilesInFolder = async folderPath => promiseRimRaf(`${folderPath}/*`);
 const writeFile = async (filePath, content) => promiseWriteFile(filePath, content);
 
-const SEEDS_SPECS_PATH = `${__dirname}/seeds/specs/vega-lite`;
-const SEEDS_PREVIEWS_PATH = `${__dirname}/seeds/previews/vega-lite`;
-const SEEDS_DATA_PATH = `${__dirname}/seeds/`;
+const SEEDS_SPECS_PATH = `${__dirname}/specs/vega-lite`;
+const SEEDS_PREVIEWS_PATH = `${__dirname}/previews/vega-lite`;
+const SEEDS_DATA_PATH = `${__dirname}/`;
 
 const getSpecFilePath = fileName => `${SEEDS_SPECS_PATH}/${fileName}`;
 const getPreviewFilePath = fileName => `${SEEDS_PREVIEWS_PATH}/${fileName}`;
