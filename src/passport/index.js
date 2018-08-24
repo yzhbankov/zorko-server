@@ -1,3 +1,5 @@
+import User from '../users';
+
 const config = require('../config');
 const logger = require('../logger');
 const passport = require('passport');
@@ -9,13 +11,27 @@ passport.use(new GitHubStrategy(
         clientSecret: config.auth.github.secret,
         callbackURL: config.auth.github.callbackUrl,
     },
-    ((accessToken, refreshToken, profile, cb) => {
+    async (accessToken, refreshToken, profile, done) => {
         logger.log('info', `Start github user verification ${profile.id}`);
-        process.nextTick(() => {
-            logger.log('info', `Finish github user verification ${profile.id}`);
-            return cb(null, profile);
-        });
-    }),
+        const {
+            id, avatar_url, login, email, name,
+        } = profile._json;
+        let user;
+        let error;
+        try {
+            user = await User.findOrCreate({
+                githubId: id,
+                avatarUrl: avatar_url,
+                login,
+                email,
+                firstName: name,
+                lastName: '',
+            });
+        } catch (e) {
+            error = e;
+        }
+        return done(error, user);
+    },
 ));
 
 
