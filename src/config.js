@@ -10,6 +10,7 @@ module.exports = {
         },
         sessionSecret: process.env.SESSION_SECRET,
         zorkoWebAppUrl: process.env.ZORKO_WEB_APP_URL,
+        jwtsecret: process.env.JWT_SECRET,
     },
     db: {
         url: process.env.MONGO_ROOT_URL,

@@ -1,9 +1,10 @@
-const User = require('../users');
-
 const config = require('../config');
 const logger = require('../logger');
 const passport = require('passport');
 const GitHubStrategy = require('passport-github').Strategy;
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+const User = require('../users');
 
 passport.use(new GitHubStrategy(
     {
@@ -56,55 +57,29 @@ passport.use(new GitHubStrategy(
 //     },
 // ));
 
-// passport.use(new JWTStrategy(
-//     {
-//         jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-//         secretOrKey: config.jwtsecret,
-//     },
-//     async (jwtPayload, done) => {
-//         const usersCollection = db.get().collection('users');
-//         const user = await usersCollection.findOne({ email: jwtPayload.email });
-//
-//         if (!user) { return done(null, false); }
-//
-//         return done(null, user);
-//     },
-// ));
-//
-// passport.use(new GitHubStrategy(
-//     {
-//         clientID: config.github.clientId,
-//         clientSecret: config.github.secret,
-//         callbackURL: config.github.callbackUrl,
-//     },
-//     async (accessToken, refreshToken, profile, done) => {
-//         const {
-//             id, avatar_url, login, email, name,
-//         } = profile._json;
-//         const user = await User.findOrCreate({
-//             githubId: id,
-//             avatarUrl: avatar_url,
-//             login,
-//             email,
-//             firstName: name,
-//             lastName: '',
-//         });
-//         return done(null, user);
-//     },
-// ));
-//
-// passport.serializeUser((user, done) => {
-//     console.log('serialize user', user);
-//     done(null, user);
-// });
-// passport.deserializeUser(async (obj, done) => {
-//     console.log('deserialize user', obj);
-//     // const usersCollection = db.get().collection('users');
-//     // usersCollection.findOne({ _id: id }, (err, user) => {
-//     //     done(err, user);
-//     // });
-//     done(null, obj);
-// });
+passport.use(new JwtStrategy(
+    {
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        secretOrKey: config.auth.jwtsecret,
+    },
+    async (jwtPayload, done) => {
+        let user;
+        try {
+            user = await User.findById(jwtPayload.id);
+            done(null, user);
+        } catch (e) {
+            logger.error(`Error during jwt verification on user id=${jwtPayload.id}`);
+            done(e, null);
+        }
+
+        if (!user) {
+            logger.log('debug', `Can't find user by id ${jwtPayload.id}`);
+            return done(null, false);
+        }
+
+        return done(null, user);
+    },
+));
 
 passport.serializeUser((user, done) => {
     logger.log('info', `Serialize user by id${user._id}`);
