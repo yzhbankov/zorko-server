@@ -12,10 +12,10 @@ const GitHubStrategy = require('passport-github').Strategy;
 
 require('dotenv').config();
 const config = require('./config');
-const api = require('./server/api');
-const db = require('./db');
+const api = require('./api');
+const db = require('../db/index');
 const cors = require('cors');
-const User = require('./server/users');
+const User = require('./users/index');
 
 const app = express();
 

@@ -1,6 +1,6 @@
 require('dotenv')
     .config();
-const config = require('../config');
+const config = require('../src/config');
 const db = require('.');
 const admin = require('./seeds/users/admin');
 const {

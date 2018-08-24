@@ -4,7 +4,7 @@ const ObjectId = require('mongodb').ObjectID;
 const Grid = require('gridfs-stream');
 
 require('dotenv').config();
-const config = require('./../../config');
+const config = require('../config');
 const db = require('./../../db');
 
 const Specs = require('./');

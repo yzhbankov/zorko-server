@@ -2,11 +2,11 @@
   "name": "y",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "nodemon --inspect server.js",
+    "start": "node src/app.js",
+    "dev": "nodemon --inspect src/app.js",
     "seeds-to-db": "node db/seedsToDb.js",
     "specs-to-previews": "node db/specsToPreviews.js",
     "postinstall": "npm run seeds-to-db"
