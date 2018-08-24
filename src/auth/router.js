@@ -13,7 +13,7 @@ router.post('/local/login', passport.authenticate('local', { failureRedirect: '/
     return res.json({ user: req.user, token });
 });
 
-router.get('/account', handlers.ensureAuthenticated, (req, res) => {
+router.get('/profile', handlers.ensureAuthenticated, (req, res) => {
     res.send({user: req.user});
 });
 
