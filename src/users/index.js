@@ -17,6 +17,13 @@ async function findUserByEmailOrUid(email, uid) {
     return user;
 }
 
+async function findById(uid) {
+    const usersCollection = db.get()
+        .collection('users');
+    const user = await usersCollection.findOne({ _id: ObjectId(uid) });
+    return user;
+}
+
 async function findByGithubId(githubId) {
     const usersCollection = db.get()
         .collection('users');
@@ -166,6 +173,7 @@ module.exports = {
     getUsers,
     createUser,
     removeUser,
+    findById,
     findUserByEmailOrUid,
     setSpecsToUser,
     findOrCreate,

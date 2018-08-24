@@ -107,13 +107,19 @@ passport.use(new GitHubStrategy(
 // });
 
 passport.serializeUser((user, done) => {
-    logger.log('info', `Serialize user ${user}`);
-    done(null, user);
+    logger.log('info', `Serialize user by id${user._id}`);
+    done(null, {id: user._id});
 });
 
-passport.deserializeUser((obj, done) => {
-    logger.log('info', `Deserialize user ${obj}`);
-    done(null, obj);
+passport.deserializeUser(async (obj, done) => {
+    logger.log('info', `Deserialize user by id ${obj.id}`);
+    try {
+        const user = await User.findById(obj.id);
+        done(null, user);
+    } catch (e) {
+        logger.error(`Can't deserialize user ${obj.id}`);
+        done(e, null);
+    }
 });
 
 module.exports = passport;
