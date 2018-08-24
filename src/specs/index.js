@@ -17,49 +17,43 @@ function formatSpec(spec) {
     };
 }
 
-async function createSpec({ spec, title, email, preview }) {
-    try {
-        const specsCollection = db.get().collection('specs');
-        const now = new Date();
+async function createSpec({ spec, title, preview, login }) {
+    const specsCollection = db.get()
+        .collection('specs');
+    const now = new Date();
 
-        const currentUser = await findUserByEmailOrUid(email);
-        if (!currentUser) {
-            throw error(404, 'User not found');
-        }
-
-        const result = await specsCollection.insert({
-            spec,
-            title,
-            createdBy: {
-                email, login: currentUser.email, avatarUrl: currentUser.avatarUrl,
-            },
-            preview,
-            createdAt: now,
-            updatedAt: now,
-        });
-        const createdSpec = result.ops[0];
-
-
-        const currentUserSpecs = currentUser.specs ? currentUser.specs : [];
-        const updatedUserSpecs = [...currentUserSpecs, createdSpec._id];
-        await setSpecsToUser(email, updatedUserSpecs);
-
-        return result.ops[0];
-    } catch (err) {
-        throw err;
-    }
+    const result = await specsCollection.insert({
+        spec,
+        title,
+        createdBy: {
+            login,
+        },
+        preview,
+        createdAt: now,
+        updatedAt: now,
+    });
+    return result.ops[0];
 }
 
 async function removeSpec(uid, email) {
     try {
-        const specsCollection = db.get().collection('specs');
-        const specExist = await specsCollection.findOne({ _id: ObjectId(uid), 'createdBy.email': email });
+        const specsCollection = db.get()
+            .collection('specs');
+        const specExist = await specsCollection.findOne({
+            _id: ObjectId(uid),
+            'createdBy.email': email
+        });
         const user = await findUserByEmailOrUid(email);
         if (!specExist || !user) {
             throw error(404, 'Spec or user not exist');
         }
-        await specsCollection.deleteOne({ _id: ObjectId(uid), 'createdBy.email': email });
-        const updatedUserSpecs = user.specs.filter(spec => ObjectId(spec).toString() !== ObjectId(uid).toString());
+        await specsCollection.deleteOne({
+            _id: ObjectId(uid),
+            'createdBy.email': email
+        });
+        const updatedUserSpecs = user.specs.filter(spec => ObjectId(spec)
+            .toString() !== ObjectId(uid)
+            .toString());
         await setSpecsToUser(email, updatedUserSpecs);
     } catch (err) {
         throw err;
@@ -67,9 +61,10 @@ async function removeSpec(uid, email) {
 }
 
 async function getSpecs(uid = null, { offset = 0, limit = SEARCH.LIMIT }) {
-    const specsCollection = db.get().collection('specs');
+    const specsCollection = db.get()
+        .collection('specs');
     if (!uid) {
-        const specs = await specsCollection.find({ })
+        const specs = await specsCollection.find({})
             .skip(offset)
             .limit(limit)
             .sort({ createdAt: -1 })

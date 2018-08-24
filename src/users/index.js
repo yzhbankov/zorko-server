@@ -75,25 +75,20 @@ async function findOrCreate(options) {
             user = await userCreate(options);
         }
     }
-    // TODO: create user with local auth (not github)
     return user;
 }
 
-async function setSpecsToUser(email, specs) {
-    try {
-        const usersCollection = db.get()
-            .collection('users');
-        let user;
-        if (email) {
-            user = await usersCollection.updateOne(
-                { email },
-                { $set: { specs } },
-            );
-        }
-        return user;
-    } catch (err) {
-        throw err;
-    }
+async function addSpec(user, spec) {
+    const currentUserSpecs = user.specs ? user.specs : [];
+    const updatedUserSpecs = [...currentUserSpecs, spec._id];
+
+    const usersCollection = db.get()
+        .collection('users');
+    const nextUser = await usersCollection.updateOne(
+        { login: user.login },
+        { $set: { specs: updatedUserSpecs } },
+    );
+    return nextUser;
 }
 
 function formatUser(user) {
@@ -175,7 +170,7 @@ module.exports = {
     removeUser,
     findById,
     findUserByEmailOrUid,
-    setSpecsToUser,
+    addSpec,
     findOrCreate,
 };
 

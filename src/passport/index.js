@@ -65,15 +65,14 @@ passport.use(new JwtStrategy(
     async (jwtPayload, done) => {
         let user;
         try {
-            user = await User.findById(jwtPayload.id);
-            done(null, user);
+            user = await User.findById(jwtPayload._id);
         } catch (e) {
             logger.error(`Error during jwt verification on user id=${jwtPayload.id}`);
             done(e, null);
         }
 
         if (!user) {
-            logger.log('debug', `Can't find user by id ${jwtPayload.id}`);
+            logger.info(`Can't find user by id ${jwtPayload.id}`);
             return done(null, false);
         }
 
