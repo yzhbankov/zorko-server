@@ -2,7 +2,7 @@ const error = require('http-errors');
 const db = require('./../../db');
 const ObjectId = require('mongodb').ObjectID;
 
-const { SEARCH } = require('./../config/constants');
+const { SEARCH } = require('../constants');
 const { findUserByEmailOrUid, setSpecsToUser } = require('./../users/handlers');
 
 function formatSpec(spec) {

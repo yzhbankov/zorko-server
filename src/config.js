@@ -1,19 +1,19 @@
+require('dotenv').config();
+
 module.exports = {
-    server: {
-        port: process.env.PORT,
-    },
-    client: {
-        url: process.env.ZORKO_WEB_APP_URL,
+    port: process.env.PORT,
+    auth: {
+        github: {
+            clientId: process.env.GITHUB_CLIENT_ID,
+            secret: process.env.GITHUB_CLIENT_SECRET,
+            callbackUrl: process.env.GITHUB_CLIENT_CALLBACK_URL,
+        },
+        sessionSecret: process.env.SESSION_SECRET,
+        zorkoWebAppUrl: process.env.ZORKO_WEB_APP_URL,
     },
     db: {
         url: process.env.MONGO_ROOT_URL,
         name: process.env.MONGO_DB_NAME,
+        urlParams: process.env.MONGO_URL_PARAMS,
     },
-    github: {
-        clientId: process.env.GITHUB_CLIENT_ID,
-        secret: process.env.GITHUB_CLIENT_SECRET,
-        callbackUrl: process.env.GITHUB_CLIENT_CALLBACK_URL,
-    },
-    secret: process.env.SESSION_SECRET,
-    jwtsecret: process.env.JWT_SECRET,
 };

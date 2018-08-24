@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const error = require('http-errors');
 
 const db = require('./../../db');
-const { DATES } = require('./../config/constants');
+const { DATES } = require('../constants');
 
 async function userCreate(email, password, login = '', firstName = '', lastName = '', avatarUrl = '') {
     const usersCollection = db.get().collection('users');

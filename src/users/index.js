@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const ObjectId = require('mongodb').ObjectID;
 
 const db = require('./../../db');
-const { DATES } = require('./../config/constants');
+const { DATES } = require('../constants');
 
 async function findUserByEmailOrUid(email, uid) {
     const usersCollection = db.get()
