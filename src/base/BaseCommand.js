@@ -3,7 +3,9 @@ const Exception = require('./Exception');
 
 class BaseCommand {
     constructor(args) {
-        if (!args.context) throw new Error('CONTEXT_REQUIRED');
+        if (!args.context) {
+            this.context = {};
+        }
         this.context = args.context;
     }
 
@@ -17,19 +19,21 @@ class BaseCommand {
         // Feel free to override this method if you need dynamic validation
 
         // Cache validator
-        const validator = this.constructor.validator || new LIVR.Validator(this.constructor.validationRules).prepare();
+        const validator = this.constructor.validator || new LIVR.Validator(this.constructor.validationRules()).prepare();
         this.constructor.validator = validator;
 
-        return this.doValidationWithValidator(data, validator);
+        const result = await this.doValidationWithValidator(data, validator);
+        return result;
     }
 
-    doValidation(data, rules) {
+    async doValidation(data, rules) {
         // You can use this in overriden "validate" method
         const validator = new LIVR.Validator(rules).prepare();
-        return this.doValidationWithValidator(data, validator);
+        const result = await this.doValidationWithValidator(data, validator);
+        return result;
     }
 
-    static async doValidationWithValidator(data, validator) {
+    async doValidationWithValidator(data, validator) {
         const result = validator.validate(data);
 
         if (!result) {

@@ -40,5 +40,6 @@ module.exports = {
         "max-len": [1, 170],
         "indent": ["error", 4, { "SwitchCase": 1 }],
         "radix": ["error", "as-needed"],
+        "class-methods-use-this" : "off"
     }
 };
