@@ -8,7 +8,7 @@ require('dotenv')
 const config = require('../config');
 const db = require('../db');
 
-const Specs = require('./');
+const Specs = require('./Spec');
 const User = require('../users');
 
 async function getSpecsHandler(req, res, next) {

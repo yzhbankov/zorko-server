@@ -1,5 +1,6 @@
 const BaseCommand = require('../base/BaseCommand');
-const Specs = require('./index');
+const Specs = require('./Spec');
+const User = require('../users');
 
 class SpecRemove extends BaseCommand {
     static validationRules() {
@@ -8,8 +9,13 @@ class SpecRemove extends BaseCommand {
 
     async execute(params) {
         const { id } = params;
-        const wasRemoved = await Specs.removeSpec(id);
-        return wasRemoved;
+        const spec = await Specs.getSpec(id);
+        await Specs.removeSpec(spec._id);
+
+        const user = await User.findByLogin(spec.createdBy.login);
+        await User.removeSpec(user, spec);
+
+        return true;
     }
 }
 

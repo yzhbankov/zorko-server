@@ -1,5 +1,5 @@
 const BaseCommand = require('../base/BaseCommand');
-const Specs = require('./index');
+const Specs = require('./Spec');
 
 class SpecRead extends BaseCommand {
     static validationRules() {
@@ -8,9 +8,9 @@ class SpecRead extends BaseCommand {
 
     async execute(params) {
         const { id } = params;
-        const spec = await Specs.getSpecs(id, {});
+        const spec = await Specs.getSpec(id);
         return {
-            id: spec.id,
+            id: spec._id,
             spec: spec.spec,
             title: spec.title,
             createdBy: spec.createdBy,

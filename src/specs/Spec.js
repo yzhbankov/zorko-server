@@ -1,5 +1,4 @@
 const db = require('../db');
-const User = require('../users');
 const ObjectId = require('mongodb').ObjectID;
 const Exception = require('../base/Exception');
 
@@ -38,22 +37,22 @@ async function createSpec({
 async function removeSpec(id) {
     const specsCollection = db.get()
         .collection('specs');
-    const spec = await specsCollection.findOne({
-        _id: ObjectId(id),
-    });
-    if (!spec) {
-        throw new Exception({ code: 'NOT_FOUND_ERROR', fields: { id }, message: 'Can\'t find spec by id' });
-    }
-
-    const user = await User.findByLogin(spec.createdBy.login);
-
     await specsCollection.deleteOne({
         _id: ObjectId(id),
     });
 
-    await User.removeSpec(user, spec);
-
     return true;
+}
+
+async function getSpec(id) {
+    const specsCollection = db.get()
+        .collection('specs');
+    const spec = await specsCollection.findOne({ _id: ObjectId(id) });
+    if (!spec) {
+        throw new Exception({ code: 'NOT_FOUND_ERROR', fields: { id }, message: 'Can\'t find spec by id' });
+    }
+
+    return spec;
 }
 
 async function getSpecs(uid = null, { offset = 0, limit = SEARCH.LIMIT }) {
@@ -79,6 +78,7 @@ async function getSpecs(uid = null, { offset = 0, limit = SEARCH.LIMIT }) {
 }
 
 module.exports = {
+    getSpec,
     createSpec,
     removeSpec,
     getSpecs,

@@ -1,5 +1,5 @@
 const BaseCommand = require('../base/BaseCommand');
-const Specs = require('./index');
+const Specs = require('./Spec');
 
 class SpecListRead extends BaseCommand {
     static validationRules() {

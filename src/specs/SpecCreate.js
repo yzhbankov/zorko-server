@@ -1,5 +1,5 @@
 const BaseCommand = require('../base/BaseCommand');
-const Specs = require('./index');
+const Specs = require('./Spec');
 const User = require('../users');
 
 class SpecCreate extends BaseCommand {
