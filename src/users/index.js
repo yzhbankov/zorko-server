@@ -96,10 +96,12 @@ async function updateSpecs(user, specs) {
 }
 
 async function addSpec(user, spec) {
-    const currentUserSpecs = user.specs ? user.specs : [];
-    const updatedUserSpecs = [...currentUserSpecs, spec._id];
-
-    const nextUser = await updateSpecs(user, updatedUserSpecs);
+    const usersCollection = db.get()
+        .collection('users');
+    const nextUser = await usersCollection.updateOne(
+        { login: user.login },
+        { $addToSet: { specs: spec._id } },
+    );
     return nextUser;
 }
 
