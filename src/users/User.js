@@ -109,14 +109,6 @@ async function removeSpec(user, spec) {
     return nextUser;
 }
 
-function formatUser(user) {
-    return {
-        login: user.login,
-        avatarUrl: user.avatarUrl ? user.avatarUrl : '',
-        specs: user.specs ? user.specs : [],
-    };
-}
-
 async function getUser(login) {
     const usersCollection = db.get()
         .collection('users');

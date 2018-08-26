@@ -3,7 +3,7 @@ const Specs = require('./Spec');
 
 class SpecRead extends BaseCommand {
     static validationRules() {
-        return { id: ['required'] };
+        return { id: 'required' };
     }
 
     async execute(params) {
