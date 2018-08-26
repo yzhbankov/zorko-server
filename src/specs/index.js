@@ -17,7 +17,7 @@ function formatSpec(spec) {
     };
 }
 
-async function createSpec({ spec, title, preview, login }) {
+async function createSpec({ spec, title, preview, createdBy }) {
     const specsCollection = db.get()
         .collection('specs');
     const now = new Date();
@@ -25,9 +25,7 @@ async function createSpec({ spec, title, preview, login }) {
     const result = await specsCollection.insert({
         spec,
         title,
-        createdBy: {
-            login,
-        },
+        createdBy,
         preview,
         createdAt: now,
         updatedAt: now,
