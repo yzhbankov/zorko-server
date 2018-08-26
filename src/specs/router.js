@@ -1,5 +1,4 @@
 const express = require('express');
-const handlers = require('./handlers');
 const makeRouterHandler = require('../util/makeRouterHandler');
 const shouldAuthenticate = require('../util/shouldAuthenticate');
 const SpecRead = require('./SpecRead');
@@ -25,11 +24,10 @@ router.post('/', shouldAuthenticate(), makeRouterHandler(
     req => ({ ...req.body, createdBy: { login: req.user.login } }),
 ));
 
-router.delete('/:id', shouldAuthenticate(), makeRouterHandler(SpecRemove, req => ({
-    id: req.params.id,
-})));
-
-router.put('/:specUid/preview', shouldAuthenticate(), handlers.addPreviewHandler);
+router.delete('/:id', shouldAuthenticate(), makeRouterHandler(
+    SpecRemove,
+    req => ({ id: req.params.id, }),
+));
 
 router.get('/:id/preview', makeRouterHandler(
     SpecPreviewRead,
