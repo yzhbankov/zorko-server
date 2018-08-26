@@ -3,7 +3,7 @@ const makeRouterHandler = require('../util/makeRouterHandler');
 const shouldAuthenticate = require('../util/shouldAuthenticate');
 const UserListRead = require('./UserListRead');
 const UserRead = require('./UserRead');
-const UserLocalCreate = require('./UserLocalCreate');
+const UserCreate = require('./UserCreate');
 
 const handlers = require('./handlers');
 
@@ -20,11 +20,14 @@ router.get('/:login', makeRouterHandler(
 ));
 
 router.post('/', makeRouterHandler(
-    UserLocalCreate,
+    UserCreate,
     req => ({
-        login: req.body.login,
-        password: req.body.password,
-        email: req.body.email,
+        profile: {
+            provider: 'local',
+            login: req.body.login,
+            password: req.body.password,
+            email: req.body.email,
+        },
     }),
 ));
 
