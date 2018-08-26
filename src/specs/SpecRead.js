@@ -10,7 +10,12 @@ class SpecRead extends BaseCommand {
         const { id } = params;
         const spec = await Specs.getSpecs(id, {});
         // TODO: return not direct object
-        return spec.spec;
+        return {
+            id: spec._id,
+            spec: spec.spec,
+            title: spec.title,
+            createdBy: spec.createdBy,
+        };
     }
 }
 
