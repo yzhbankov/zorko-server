@@ -160,7 +160,6 @@ async function createUser(user) {
             message: 'User with this login already exist',
         });
     }
-    const now = (new Date()).getTime();
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(user.password, saltRounds);
 
@@ -169,7 +168,10 @@ async function createUser(user) {
         email: user.email,
         password: hashedPassword,
         admin: user.admin,
-        created_at: now,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        removedAt: new Date(DATES.REMOVED_AT),
+        specs: [],
     });
 
     return result.ops[0];
