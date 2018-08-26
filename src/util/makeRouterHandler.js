@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const logger = require('../logger');
 
 const makeRouterHandler = (Command, mapToParams) => async (req, res) => {
@@ -6,9 +7,13 @@ const makeRouterHandler = (Command, mapToParams) => async (req, res) => {
         const command = new Command({ context });
         const result = await command.run(mapToParams(req));
         if (result) {
-            res.json(result);
+            if (_.isObject(result)) {
+                res.json(result);
+            } else {
+                res.status(204).json(result);
+            }
         } else {
-            result.status(404).json({ code: 'NOT_FOUND' });
+            res.status(404).json({ code: 'NOT_FOUND' });
         }
     } catch (err) {
         if (err.code === 'FORMAT_ERROR') {

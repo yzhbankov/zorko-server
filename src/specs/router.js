@@ -1,10 +1,11 @@
 const express = require('express');
 const handlers = require('./handlers');
 const makeRouterHandler = require('../util/makeRouterHandler');
+const shouldAuthenticate = require('../util/shouldAuthenticate');
 const SpecRead = require('./SpecRead');
 const SpecListRead = require('./SpecListRead');
 const SpecCreate = require('./SpecCreate');
-const shouldAuthenticate = require('../util/shouldAuthenticate');
+const SpecRemove = require('./SpecRemove');
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ router.post('/', shouldAuthenticate(), makeRouterHandler(SpecCreate, req => ({
         login: req.user.login,
     },
 })));
-router.delete('/:uid', shouldAuthenticate(), handlers.removeSpecHandler);
+router.delete('/:id', shouldAuthenticate(), makeRouterHandler(SpecRemove, req => ({ id: req.params.id })));
 
 router.put('/:specUid/preview', shouldAuthenticate(), handlers.addPreviewHandler);
 router.get('/preview/:prevUid', handlers.getPreview);

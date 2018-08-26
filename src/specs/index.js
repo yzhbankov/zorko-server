@@ -1,9 +1,7 @@
-const error = require('http-errors');
 const db = require('../db');
 const ObjectId = require('mongodb').ObjectID;
 
 const { SEARCH } = require('../constants');
-const { findUserByEmailOrUid, setSpecsToUser } = require('./../users/handlers');
 
 function formatSpec(spec) {
     return {
@@ -33,29 +31,29 @@ async function createSpec({ spec, title, preview, createdBy }) {
     return result.ops[0];
 }
 
-async function removeSpec(uid, email) {
-    try {
-        const specsCollection = db.get()
-            .collection('specs');
-        const specExist = await specsCollection.findOne({
-            _id: ObjectId(uid),
-            'createdBy.email': email
-        });
-        const user = await findUserByEmailOrUid(email);
-        if (!specExist || !user) {
-            throw error(404, 'Spec or user not exist');
-        }
-        await specsCollection.deleteOne({
-            _id: ObjectId(uid),
-            'createdBy.email': email
-        });
-        const updatedUserSpecs = user.specs.filter(spec => ObjectId(spec)
-            .toString() !== ObjectId(uid)
-            .toString());
-        await setSpecsToUser(email, updatedUserSpecs);
-    } catch (err) {
-        throw err;
+async function removeSpec(id) {
+    const specsCollection = db.get()
+        .collection('specs');
+    const specExist = await specsCollection.findOne({
+        _id: ObjectId(id),
+    });
+
+    if (!specExist) {
+        return false;
     }
+    // const user = await findUserByEmailOrUid(email);
+    // if (!specExist || !user) {
+    //     throw error(404, 'Spec or user not exist');
+    // }
+    await specsCollection.deleteOne({
+        _id: ObjectId(id),
+    });
+    // const updatedUserSpecs = user.specs.filter(spec => ObjectId(spec)
+    //     .toString() !== ObjectId(id)
+    //     .toString());
+    // await setSpecsToUser(email, updatedUserSpecs);
+
+    return true;
 }
 
 async function getSpecs(uid = null, { offset = 0, limit = SEARCH.LIMIT }) {
