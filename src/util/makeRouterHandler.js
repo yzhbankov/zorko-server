@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const logger = require('../logger');
 
 const makeRouterHandler = (Command, mapToParams, mapToRes) => async (req, res) => {

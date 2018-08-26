@@ -1,6 +1,7 @@
 const error = require('http-errors');
 const bcrypt = require('bcrypt');
 const ObjectId = require('mongodb').ObjectID;
+const Exception = require('../base/Exception');
 
 const db = require('../db');
 const { DATES } = require('../constants');
@@ -85,16 +86,6 @@ async function findOrCreate(options) {
     return user;
 }
 
-async function updateSpecs(user, specs) {
-    const usersCollection = db.get()
-        .collection('users');
-    const nextUser = await usersCollection.updateOne(
-        { login: user.login },
-        { $set: { specs } },
-    );
-    return nextUser;
-}
-
 async function addSpec(user, spec) {
     const usersCollection = db.get()
         .collection('users');
@@ -106,7 +97,9 @@ async function addSpec(user, spec) {
 }
 
 async function removeSpec(user, spec) {
-    const updatedUserSpecs = user.specs.filter(userSpecId => ObjectId(userSpecId).toString() !== ObjectId(spec._id).toString());
+    const updatedUserSpecs = user.specs.filter(userSpecId => ObjectId(userSpecId)
+        .toString() !== ObjectId(spec._id)
+        .toString());
     const usersCollection = db.get()
         .collection('users');
     const nextUser = await usersCollection.updateOne(
@@ -124,20 +117,9 @@ function formatUser(user) {
     };
 }
 
-async function getUsers(login = null, { offset = 0, limit = 0 }) {
+async function getUser(login) {
     const usersCollection = db.get()
         .collection('users');
-    if (!login) {
-        const users = await usersCollection.find({
-            $where: `(new Date(this.removedAt)).getTime() === ${(new Date(DATES.REMOVED_AT)).getTime()}`,
-        })
-            .skip(offset)
-            .limit(limit)
-            .toArray();
-
-        return users.map(user => formatUser(user));
-    }
-
     const user = await usersCollection.findOne({
         $and: [
             { login },
@@ -148,10 +130,29 @@ async function getUsers(login = null, { offset = 0, limit = 0 }) {
     });
 
     if (!user) {
-        throw error(404, 'User not found');
+        throw new Exception({
+            code: 'NOT_FOUND_ERROR',
+            fields: {
+                login,
+            },
+            message: 'Can\'t find user',
+        });
     }
 
-    return formatUser(user);
+    return user;
+}
+
+async function getUsers({ offset = 0, limit = 0 }) {
+    const usersCollection = db.get()
+        .collection('users');
+    const users = await usersCollection.find({
+        $where: `(new Date(this.removedAt)).getTime() === ${(new Date(DATES.REMOVED_AT)).getTime()}`,
+    })
+        .skip(offset)
+        .limit(limit)
+        .toArray();
+
+    return users;
 }
 
 async function createUser(user) {
@@ -191,6 +192,7 @@ async function removeUser(uid) {
 
 module.exports = {
     getUsers,
+    getUser,
     createUser,
     removeUser,
     findById,
