@@ -6,21 +6,28 @@ const logger = require('../logger');
 
 const router = express.Router();
 
-router.get(['/'], handlers.getSpecsHandler);
-router.get('/:id', async (req, res) => {
+
+const makeRouterHandler = (Command, mapToParams) => async (req, res) => {
     try {
-        const { params, session: { context } } = req;
-        const command = new SpecReadCommand({ context });
-        const result = await command.run(params);
-        res.json(result);
-    } catch (e) {
-        logger.error(e);
-        // TODO: determine error code
+        const { session: { context } } = req;
+        const command = new Command({ context });
+        const result = await command.run(mapToParams(req));
+        if (result) {
+            res.json(result);
+        } else {
+            result.status(404).json({ code: 'NOT_FOUND' });
+        }
+    } catch (err) {
+        logger.log('error', err);
+        // TODO: determine error code, return 400 if validation fails
         res.status(500).json({
-            code: e.message,
+            code: err.message,
         });
     }
-});
+};
+
+router.get(['/'], handlers.getSpecsHandler);
+router.get('/:id', makeRouterHandler(SpecReadCommand, req => ({ id: req.params.id })));
 
 router.post('/', passport.authenticate('jwt', { session: false }), handlers.createSpecHandler);
 router.delete('/:uid', passport.authenticate('jwt', { session: false }), handlers.removeSpecHandler);
