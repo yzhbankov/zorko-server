@@ -1,4 +1,4 @@
-const Users = require('./');
+const Users = require('./User');
 
 async function getUsersHandler(req, res, next) {
     try {

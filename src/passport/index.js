@@ -4,7 +4,7 @@ const passport = require('passport');
 const GitHubStrategy = require('passport-github').Strategy;
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
-const User = require('../users');
+const User = require('../users/User');
 
 passport.use(new GitHubStrategy(
     {

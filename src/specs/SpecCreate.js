@@ -1,6 +1,6 @@
 const BaseCommand = require('../base/BaseCommand');
 const Specs = require('./Spec');
-const User = require('../users');
+const User = require('../users/User');
 
 class SpecCreate extends BaseCommand {
     static validationRules() {
