@@ -150,15 +150,22 @@ async function getUsers({ offset = 0, limit = 0 }) {
 async function createUser(user) {
     const usersCollection = db.get()
         .collection('users');
-    const userExist = await findUserByEmailOrUid(user.email, null);
+    const userExist = await findByLogin(user.login);
     if (userExist) {
-        throw error(422, 'User with this email already exist');
+        throw new Exception({
+            code: 'ENTITY_ALREADY_EXIST',
+            fields: {
+                login: user.login,
+            },
+            message: 'User with this login already exist',
+        });
     }
     const now = (new Date()).getTime();
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(user.password, saltRounds);
 
     const result = await usersCollection.insert({
+        login: user.login,
         email: user.email,
         password: hashedPassword,
         admin: user.admin,

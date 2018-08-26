@@ -5,15 +5,10 @@ const makeRouterHandler = (Command, mapToParams, mapToRes) => async (req, res) =
         const { session: { context } } = req;
         const command = new Command({ context });
         const result = await command.run(mapToParams(req));
-        if (result) {
-            if (!mapToRes) {
-                res.json(result);
-            } else {
-                mapToRes(result, res);
-            }
+        if (!mapToRes) {
+            res.json(result);
         } else {
-            res.status(404)
-                .json({ code: 'NOT_FOUND_ERROR' });
+            mapToRes(result, res);
         }
     } catch (err) {
         if (err.code === 'NOT_FOUND_ERROR') {
@@ -25,6 +20,11 @@ const makeRouterHandler = (Command, mapToParams, mapToRes) => async (req, res) =
             const data = err.toHash();
             logger.log('error', ` code: ${data.code}\\n fields: ${data.fields}`);
             res.status(400)
+                .json(data);
+        } else if (err.code === 'ENTITY_ALREADY_EXIST') {
+            const data = err.toHash();
+            logger.log('error', `code: ${data.code}\\n fields: ${data.fields}, message:${err.message}`);
+            res.status(422)
                 .json(data);
         } else {
             logger.log('error', ` message: ${err.message} stack: ${err.stack}`);

@@ -1,8 +1,9 @@
 const express = require('express');
-const passport = require('passport');
 const makeRouterHandler = require('../util/makeRouterHandler');
+const shouldAuthenticate = require('../util/shouldAuthenticate');
 const UserListRead = require('./UserListRead');
 const UserRead = require('./UserRead');
+const UserLocalCreate = require('./UserLocalCreate');
 
 const handlers = require('./handlers');
 
@@ -18,7 +19,15 @@ router.get('/:login', makeRouterHandler(
     req => ({ login: req.params.login }),
 ));
 
-router.post('/', passport.authenticate('jwt', { session: false }), handlers.createUserHandler);
-router.delete('/:uid', passport.authenticate('jwt', { session: false }), handlers.removeUserHandler);
+router.post('/', makeRouterHandler(
+    UserLocalCreate,
+    req => ({
+        login: req.body.login,
+        password: req.body.password,
+        email: req.body.email,
+    }),
+));
+
+router.delete('/:uid', shouldAuthenticate(), handlers.removeUserHandler);
 
 module.exports = router;

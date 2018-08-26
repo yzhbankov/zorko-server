@@ -23,7 +23,7 @@ async function getUsersHandler(req, res, next) {
 async function createUserHandler(req, res, next) {
     try {
         const data = {
-            email: req.body.email,
+            login: req.body.login,
             password: req.body.password,
             admin: req.body.admin,
         };
