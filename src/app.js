@@ -3,19 +3,12 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const morgan = require('morgan');
-// const bcrypt = require('bcrypt');
-
 const passport = require('passport');
-const logger = require('./logger');
-// const LocalStrategy = require('passport-local').Strategy;
-// const JWTStrategy = require('passport-jwt').Strategy;
-// const ExtractJWT = require('passport-jwt').ExtractJwt;
-// const GitHubStrategy = require('passport-github').Strategy;
 
+const logger = require('./logger');
 const config = require('./config');
 const db = require('./db');
 const cors = require('cors');
-// const User = require('./users');
 
 const app = express();
 
