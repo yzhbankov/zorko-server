@@ -1,4 +1,5 @@
 const logger = require('../logger');
+const _ = require('lodash');
 
 const makeRouterHandler = (Command, mapToParams, mapToRes) => async (req, res) => {
     try {
@@ -26,11 +27,23 @@ const makeRouterHandler = (Command, mapToParams, mapToRes) => async (req, res) =
             logger.log('error', `code: ${data.code}\\n fields: ${data.fields}, message:${err.message}`);
             res.status(422)
                 .json(data);
+        } else if (err.code === 'PERMISSIONS_ERROR') {
+            const data = err.toHash();
+            logger.log('error', `code: ${data.code}\\n fields: ${data.fields}, message:${err.message}`);
+            res.status(403)
+                .json({
+                    code: data.code,
+                    message: err.message,
+                });
         } else {
-            logger.log('error', ` message: ${err.message} stack: ${err.stack}`);
+            const message = _.isObject(err) ? err.message : err;
+            const stack = err.stack;
+            logger.log('error', ` message: ${message} stack: ${stack}`);
+            // TODO: don't return stack trace for production
             res.status(500)
                 .json({
-                    message: err.message,
+                    message,
+                    stack,
                 });
         }
     }

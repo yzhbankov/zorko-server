@@ -175,18 +175,13 @@ async function createUser(user) {
     return result.ops[0];
 }
 
-async function removeUser(uid) {
+async function removeUser(user) {
     const usersCollection = db.get()
         .collection('users');
-    const userExist = await findUserByEmailOrUid(null, uid);
-    if (!userExist) {
-        throw error(404, 'Removed user not found');
-    }
     await usersCollection.deleteOne({
-        _id: uid,
+        login: user.login,
     });
-
-    return userExist;
+    return true;
 }
 
 module.exports = {

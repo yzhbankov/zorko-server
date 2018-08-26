@@ -4,8 +4,7 @@ const shouldAuthenticate = require('../util/shouldAuthenticate');
 const UserListRead = require('./UserListRead');
 const UserRead = require('./UserRead');
 const UserCreate = require('./UserCreate');
-
-const handlers = require('./handlers');
+const UserRemove = require('./UserRemove');
 
 const router = express.Router();
 
@@ -31,6 +30,12 @@ router.post('/', makeRouterHandler(
     }),
 ));
 
-router.delete('/:uid', shouldAuthenticate(), handlers.removeUserHandler);
+router.delete('/:login', shouldAuthenticate(), makeRouterHandler(
+    UserRemove,
+    req => ({
+        login: req.params.login,
+        admin: req.user.admin ? req.user.admin : false,
+    }),
+));
 
 module.exports = router;
