@@ -7,7 +7,7 @@ class SpecCreate extends BaseCommand {
         return {
             spec: ['required', 'any_object'],
             // TODO: make it required, so client have to upload with preview
-            preview: ['string'],
+            preview: ['required', 'string'],
             title: ['required', 'string'],
             createdBy: ['required', {
                 nested_object: {
