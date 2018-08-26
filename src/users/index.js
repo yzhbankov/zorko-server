@@ -106,8 +106,13 @@ async function addSpec(user, spec) {
 }
 
 async function removeSpec(user, spec) {
-    const updatedUserSpecs = user.specs.filter(userSpecId => ObjectId(userSpecId).toString() !== ObjectId(spec.id).toString());
-    const nextUser = await updateSpecs(user, updatedUserSpecs);
+    const updatedUserSpecs = user.specs.filter(userSpecId => ObjectId(userSpecId).toString() !== ObjectId(spec._id).toString());
+    const usersCollection = db.get()
+        .collection('users');
+    const nextUser = await usersCollection.updateOne(
+        { login: user.login },
+        { $set: { specs: updatedUserSpecs } },
+    );
     return nextUser;
 }
 

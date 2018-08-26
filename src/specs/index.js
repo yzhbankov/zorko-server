@@ -1,6 +1,7 @@
 const db = require('../db');
 const User = require('../users');
 const ObjectId = require('mongodb').ObjectID;
+const Exception = require('../base/Exception');
 
 const { SEARCH } = require('../constants');
 
@@ -16,7 +17,9 @@ function formatSpec(spec) {
     };
 }
 
-async function createSpec({ spec, title, preview, createdBy }) {
+async function createSpec({
+    spec, title, preview, createdBy,
+}) {
     const specsCollection = db.get()
         .collection('specs');
     const now = new Date();
@@ -39,15 +42,10 @@ async function removeSpec(id) {
         _id: ObjectId(id),
     });
     if (!spec) {
-        // TODO: throw error with spec error code (to handle as 400)
-        return false;
+        throw new Exception({ code: 'NOT_FOUND_ERROR', fields: { id }, message: 'Can\'t find spec by id' });
     }
 
     const user = await User.findByLogin(spec.createdBy.login);
-    if (!user) {
-        // TODO: throw error with spec error code (to handle as 400)
-        return false;
-    }
 
     await specsCollection.deleteOne({
         _id: ObjectId(id),
@@ -72,6 +70,10 @@ async function getSpecs(uid = null, { offset = 0, limit = SEARCH.LIMIT }) {
     }
 
     const spec = await specsCollection.findOne({ _id: ObjectId(uid) });
+
+    if (!spec) {
+        throw new Exception({ code: 'NOT_FOUND_ERROR', fields: { id: uid }, message: 'Can\'t find spec by id' });
+    }
 
     return spec;
 }

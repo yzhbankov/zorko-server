@@ -9,9 +9,8 @@ class SpecRead extends BaseCommand {
     async execute(params) {
         const { id } = params;
         const spec = await Specs.getSpecs(id, {});
-        // TODO: return not direct object
         return {
-            id: spec._id,
+            id: spec.id,
             spec: spec.spec,
             title: spec.title,
             createdBy: spec.createdBy,
