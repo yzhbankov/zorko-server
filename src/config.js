@@ -2,6 +2,7 @@ require('dotenv').config();
 
 module.exports = {
     port: process.env.PORT,
+    payloadBodyLimit: process.env.BODY_JSON_LIMIT,
     auth: {
         github: {
             clientId: process.env.GITHUB_CLIENT_ID,
