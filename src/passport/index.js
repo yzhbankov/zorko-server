@@ -5,6 +5,8 @@ const GitHubStrategy = require('passport-github').Strategy;
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const User = require('../users/User');
+const UserCreate = require('../users/UserCreate');
+const UserRead = require('../users/UserRead');
 
 passport.use(new GitHubStrategy(
     {
@@ -17,25 +19,32 @@ passport.use(new GitHubStrategy(
         const {
             id, avatar_url, login, email, name,
         } = profile._json;
-        let user;
-        let error;
         try {
-            user = await User.findOrCreate({
-                githubId: id,
-                avatarUrl: avatar_url,
-                login,
-                email,
-                firstName: name,
-                lastName: '',
+            const command = new UserCreate();
+            const user = await command.run({
+                profile: {
+                    provider: 'github',
+                    githubId: id,
+                    avatarUrl: avatar_url,
+                    login,
+                    email,
+                    firstName: name,
+                },
             });
-        } catch (e) {
-            error = e;
+            return done(null, user);
+        } catch (error) {
+            if (error.toHash) {
+                const data = error.toHash();
+                logger.log('error', `Problems github verification ${profile.id}, code: ${data.code}, fields: ${JSON.stringify(data.fields)}`);
+            } else {
+                logger.log('error', `Problems github verification ${profile.id}, message: ${error.message}`);
+            }
+            return done(error, null);
         }
-        return done(error, user);
     },
 ));
 
-
+// TODO: enable local auth for full test cycles in development/test
 // passport.use(new LocalStrategy(
 //     {
 //         usernameField: 'email',
@@ -63,35 +72,30 @@ passport.use(new JwtStrategy(
         secretOrKey: config.auth.jwtsecret,
     },
     async (jwtPayload, done) => {
-        let user;
         try {
-            user = await User.findById(jwtPayload._id);
-        } catch (e) {
-            logger.error(`Error during jwt verification on user id=${jwtPayload.id}`);
-            done(e, null);
+            const command = new UserRead();
+            const user = await command.run({ login: jwtPayload.login });
+            return done(null, user);
+        } catch (error) {
+            logger.error(`Error during jwt verification on user id=${jwtPayload.login}`);
+            return done(error, null);
         }
-
-        if (!user) {
-            logger.info(`Can't find user by id ${jwtPayload.id}`);
-            return done(null, false);
-        }
-
-        return done(null, user);
     },
 ));
 
 passport.serializeUser((user, done) => {
-    logger.log('info', `Serialize user by id${user._id}`);
-    done(null, {id: user._id});
+    logger.log('info', `Serialize user by login ${user.login}`);
+    done(null, { login: user.login });
 });
 
 passport.deserializeUser(async (obj, done) => {
-    logger.log('info', `Deserialize user by id ${obj.id}`);
+    logger.log('info', `Deserialize user by login ${obj.login}`);
     try {
-        const user = await User.findById(obj.id);
+        const command = new UserRead();
+        const user = await command.run({ login: obj.login });
         done(null, user);
     } catch (e) {
-        logger.error(`Can't deserialize user ${obj.id}`);
+        logger.error(`Can't deserialize user by ${obj.login}`);
         done(e, null);
     }
 });

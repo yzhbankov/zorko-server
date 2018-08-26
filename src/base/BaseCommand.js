@@ -3,10 +3,11 @@ const Exception = require('./Exception');
 
 class BaseCommand {
     constructor(args) {
-        if (!args.context) {
+        if (!args || !args.context) {
             this.context = {};
+        } else {
+            this.context = args.context;
         }
-        this.context = args.context;
     }
 
     async run(params) {
