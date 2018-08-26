@@ -1,7 +1,7 @@
 const BaseCommand = require('../base/BaseCommand');
 const Specs = require('./index');
 
-class SpecReadCommand extends BaseCommand {
+class SpecRead extends BaseCommand {
     static validationRules() {
         return { id: ['required'] };
     }
@@ -14,4 +14,4 @@ class SpecReadCommand extends BaseCommand {
     }
 }
 
-module.exports = SpecReadCommand;
+module.exports = SpecRead;
