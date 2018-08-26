@@ -1,4 +1,5 @@
 const db = require('../db');
+const User = require('../users');
 const ObjectId = require('mongodb').ObjectID;
 
 const { SEARCH } = require('../constants');
@@ -34,24 +35,25 @@ async function createSpec({ spec, title, preview, createdBy }) {
 async function removeSpec(id) {
     const specsCollection = db.get()
         .collection('specs');
-    const specExist = await specsCollection.findOne({
+    const spec = await specsCollection.findOne({
         _id: ObjectId(id),
     });
-
-    if (!specExist) {
+    if (!spec) {
+        // TODO: throw error with spec error code (to handle as 400)
         return false;
     }
-    // const user = await findUserByEmailOrUid(email);
-    // if (!specExist || !user) {
-    //     throw error(404, 'Spec or user not exist');
-    // }
+
+    const user = await User.findByLogin(spec.createdBy.login);
+    if (!user) {
+        // TODO: throw error with spec error code (to handle as 400)
+        return false;
+    }
+
     await specsCollection.deleteOne({
         _id: ObjectId(id),
     });
-    // const updatedUserSpecs = user.specs.filter(spec => ObjectId(spec)
-    //     .toString() !== ObjectId(id)
-    //     .toString());
-    // await setSpecsToUser(email, updatedUserSpecs);
+
+    await User.removeSpec(user, spec);
 
     return true;
 }

@@ -85,16 +85,27 @@ async function findOrCreate(options) {
     return user;
 }
 
-async function addSpec(user, spec) {
-    const currentUserSpecs = user.specs ? user.specs : [];
-    const updatedUserSpecs = [...currentUserSpecs, spec._id];
-
+async function updateSpecs(user, specs) {
     const usersCollection = db.get()
         .collection('users');
     const nextUser = await usersCollection.updateOne(
         { login: user.login },
-        { $set: { specs: updatedUserSpecs } },
+        { $set: { specs } },
     );
+    return nextUser;
+}
+
+async function addSpec(user, spec) {
+    const currentUserSpecs = user.specs ? user.specs : [];
+    const updatedUserSpecs = [...currentUserSpecs, spec._id];
+
+    const nextUser = await updateSpecs(user, updatedUserSpecs);
+    return nextUser;
+}
+
+async function removeSpec(user, spec) {
+    const updatedUserSpecs = user.specs.filter(userSpecId => ObjectId(userSpecId).toString() !== ObjectId(spec.id).toString());
+    const nextUser = await updateSpecs(user, updatedUserSpecs);
     return nextUser;
 }
 
@@ -180,5 +191,6 @@ module.exports = {
     findUserByEmailOrUid,
     addSpec,
     findOrCreate,
+    removeSpec,
 };
 

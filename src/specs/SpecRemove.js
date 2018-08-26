@@ -8,9 +8,9 @@ class SpecRemove extends BaseCommand {
 
     async execute(params) {
         const { id } = params;
-        const result = await Specs.removeSpec(id);
+        const wasRemoved = await Specs.removeSpec(id);
         // TODO: clean up user
-        return result;
+        return wasRemoved;
     }
 }
 
